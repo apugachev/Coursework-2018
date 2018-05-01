@@ -226,3 +226,39 @@ def Exp4(n, k, a, eps_min, eps_max, steps):
             return adj_matrix
             
     return None
+
+def Exp5(n, k, a, eps_min, eps_max, steps):
+    
+    '''
+    n - dimension of space
+    k - number of points
+    a - length of hypercube's edge
+    eps_min - minimum value of epsilon
+    eps_max - maximum value of epsilon
+    steps - number of iterations from eps_min to eps_max
+    
+    Returns Betti number for given parameters
+    '''
+    
+    matrix = DotsCoordinates(n, k, a)
+    euclid_matrix = EuclidMatrix(matrix)
+    components_num = np.array([])
+    flag = False
+    epsilons = np.arange(eps_min, eps_max, (eps_max - eps_min)/steps)
+    for i in range(steps):
+        adj_matrix = CreateAdjMatrix(euclid_matrix, epsilons[i])
+        components = csgraph.connected_components(csgraph=adj_matrix, directed=False, return_labels=False)
+        components_num = np.append(components_num, components)
+        if (components == 1 and flag == False):
+            one_component_x = epsilons[i]
+            one_component_y = components
+            flag = True
+            if flag:
+                new_eps = one_component_x
+          
+    if not flag:
+        return None
+    else:
+        edges_num = (np.count_nonzero(adj_matrix == 1) - k) // 2
+        Betti = edges_num - k + components_num[-1]
+        return Betti
