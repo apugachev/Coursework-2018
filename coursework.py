@@ -1,5 +1,6 @@
 import numpy as np
 from tqdm import tqdm
+import halton as ht
 from scipy.spatial import distance
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
@@ -9,19 +10,26 @@ from tqdm import tqdm
 import math
 from matplotlib.backends.backend_pdf import PdfPages
 
-def DotsCoordinates(n, k, a):
+np.random.seed(102)
+
+def DotsCoordinates(n, k, a, method):
     
     '''
     n - dimension of space
     k - number of points
     a - length of hypercube's edge
+    method - method of dots generation: 'Uniform' or 'Halton'
     
     Returns matrix in which coordinates of point are saved line-by-line
     '''
     
-    result = np.zeros((k,n))
-    for i in range(k):
-        result[i] = np.random.uniform(0, a, n)
+    if method == 'Uniform':
+        result = np.zeros((k,n))
+        for i in range(k):
+            result[i] = np.random.uniform(0, a, n)
+
+    elif method == 'Halton':
+        result = ht.halton(k,n)*a
         
     return result
 
@@ -57,7 +65,7 @@ def CreateAdjMatrix(euclid_matrix, eps):
         
     return result
 
-def Exp1(n, k, a, eps_min, eps_max, steps, show_graph=False, pdf_export=False):
+def Exp1(n, k, a, eps_min, eps_max, steps, method, show_graph=False, pdf_export=False):
     
     '''
     n - dimension of space
@@ -66,13 +74,14 @@ def Exp1(n, k, a, eps_min, eps_max, steps, show_graph=False, pdf_export=False):
     eps_min - minimum value of epsilon
     eps_max - maximum value of epsilon
     steps - number of iterations from eps_min to eps_max
+    method - method of dots generation: 'Uniform' or 'Halton'
     show_graph - True, if the plot of dependence between number of clusters and epsilon is needed to be shown, False otherwise
     pdf_export - True, to export the plot to PDF file
     
     Returns epsilon value at which the cluster is formed
     '''
     
-    matrix = DotsCoordinates(n, k, a)
+    matrix = DotsCoordinates(n, k, a, method)
     euclid_matrix = EuclidMatrix(matrix)
     components_num = np.array([])
     
@@ -97,7 +106,7 @@ def Exp1(n, k, a, eps_min, eps_max, steps, show_graph=False, pdf_export=False):
     if show_graph:
         fig = plt.figure(figsize=(15,8))
         plt.plot(epsilons, components_num)
-        plt.title('Dependence between number of clusters and $\epsilon$ value', size=15)
+        plt.title('Dependence between number of clusters and $\epsilon$ value ({})'.format(method), size=15)
         plt.ylabel('Number of clusters', size=15)
         plt.xlabel('$\epsilon$ value', size=15)
         plt.scatter(one_component_x, one_component_y, c='red', marker='o')
@@ -112,7 +121,7 @@ def Exp1(n, k, a, eps_min, eps_max, steps, show_graph=False, pdf_export=False):
     
     return new_eps
 
-def Exp2(n, k, a, eps_min, eps_max, steps, show_graph=False, pdf_export=False):
+def Exp2(n, k, a, eps_min, eps_max, steps, method, show_graph=False, pdf_export=False):
     
     '''
     n - dimension of space
@@ -121,6 +130,7 @@ def Exp2(n, k, a, eps_min, eps_max, steps, show_graph=False, pdf_export=False):
     eps_min - minimum value of epsilon
     eps_max - maximum value of epsilon
     steps - number of iterations from eps_min to eps_max
+    method - method of dots generation: 'Uniform' or 'Halton'
     show_graph - True, if the plot of dependence between number of clusters and epsilon is needed to be shown, False otherwise
     pdf_export - True, to export the plot to PDF file
     
@@ -130,7 +140,7 @@ def Exp2(n, k, a, eps_min, eps_max, steps, show_graph=False, pdf_export=False):
     fin_eps - epsilon at which the cluster is formed
     '''
     
-    matrix = DotsCoordinates(n, k, a)
+    matrix = DotsCoordinates(n, k, a, method)
     euclid_matrix = EuclidMatrix(matrix)
     components_num = np.array([])
     
