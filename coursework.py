@@ -1,6 +1,7 @@
 import numpy as np
 from tqdm import tqdm
 import halton as ht
+import sobol_lib as sl
 from scipy.spatial import distance
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
@@ -24,13 +25,34 @@ def DotsCoordinates(n, k, a, method):
     '''
     
     if method == 'Uniform':
-        result = np.zeros((k,n))
+        result = np.zeros((k, n))
         for i in range(k):
             result[i] = np.random.uniform(0, a, n)
 
     elif method == 'Halton':
-        result = ht.halton(k,n)*a
+        result = ht.halton(n, k) * a
         
+    elif method == 'Sobol':
+        np.random.seed()
+        i = np.random.randint(1,1000, size=1)[0]
+        if n > 40:
+            div = n // 40
+            mod = n % 40
+            result = sl.i4_sobol_generate(40, k, i)
+
+            for j in range(div-1):
+                i = np.random.randint(1,1000, size=1)[0]
+                new = sl.i4_sobol_generate(40, k, i)
+                result = np.vstack((result, new))
+
+            i = np.random.randint(1,1000, size=1)[0]
+            new = sl.i4_sobol_generate(mod, k, i)
+            result = np.vstack((result, new))
+        else:
+            result = sl.i4_sobol_generate(n, k, i)
+        
+        result = result.T * a
+        np.random.seed(102)
     return result
 
 def EuclidMatrix(coord_matrix):
@@ -106,8 +128,8 @@ def Exp1(n, k, a, eps_min, eps_max, steps, method, show_graph=False, pdf_export=
     if show_graph:
         fig = plt.figure(figsize=(15,8))
         plt.plot(epsilons, components_num)
-        plt.title('Dependence between number of clusters and $\epsilon$ value ({})'.format(method), size=15)
-        plt.ylabel('Number of clusters', size=15)
+        plt.title('Dependence between number of connected components and $\epsilon$ value ({})'.format(method), size=15)
+        plt.ylabel('Number of connected components', size=15)
         plt.xlabel('$\epsilon$ value', size=15)
         plt.scatter(one_component_x, one_component_y, c='red', marker='o')
         plt.legend()
