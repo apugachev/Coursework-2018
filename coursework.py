@@ -19,7 +19,7 @@ def DotsCoordinates(n, k, a, method):
     n - dimension of space
     k - number of points
     a - length of hypercube's edge
-    method - method of dots generation: 'Uniform' or 'Halton'
+    method - method of dots generation: 'Uniform', 'Halton' or 'Sobol'
     
     Returns matrix in which coordinates of point are saved line-by-line
     '''
@@ -35,24 +35,10 @@ def DotsCoordinates(n, k, a, method):
     elif method == 'Sobol':
         np.random.seed()
         i = np.random.randint(1,1000, size=1)[0]
-        if n > 40:
-            div = n // 40
-            mod = n % 40
-            result = sl.i4_sobol_generate(40, k, i)
-
-            for j in range(div-1):
-                i = np.random.randint(1,1000, size=1)[0]
-                new = sl.i4_sobol_generate(40, k, i)
-                result = np.vstack((result, new))
-
-            i = np.random.randint(1,1000, size=1)[0]
-            new = sl.i4_sobol_generate(mod, k, i)
-            result = np.vstack((result, new))
-        else:
-            result = sl.i4_sobol_generate(n, k, i)
-        
+        result = sl.i4_sobol_generate(n, k, i)
         result = result.T * a
         np.random.seed(102)
+        
     return result
 
 def EuclidMatrix(coord_matrix):
@@ -96,7 +82,7 @@ def Exp1(n, k, a, eps_min, eps_max, steps, method, show_graph=False, pdf_export=
     eps_min - minimum value of epsilon
     eps_max - maximum value of epsilon
     steps - number of iterations from eps_min to eps_max
-    method - method of dots generation: 'Uniform' or 'Halton'
+    method - method of dots generation: 'Uniform', 'Halton' or 'Sobol'
     show_graph - True, if the plot of dependence between number of clusters and epsilon is needed to be shown, False otherwise
     pdf_export - True, to export the plot to PDF file
     
@@ -137,7 +123,8 @@ def Exp1(n, k, a, eps_min, eps_max, steps, method, show_graph=False, pdf_export=
         plt.show()
 
     if pdf_export:
-        pp = PdfPages('CWExp1.pdf')
+        name = 'CWExp1' + method + '.pdf'
+        pp = PdfPages(name)
         pp.savefig(fig)
         pp.close()
     
@@ -152,7 +139,7 @@ def Exp2(n, k, a, eps_min, eps_max, steps, method, show_graph=False, pdf_export=
     eps_min - minimum value of epsilon
     eps_max - maximum value of epsilon
     steps - number of iterations from eps_min to eps_max
-    method - method of dots generation: 'Uniform' or 'Halton'
+    method - method of dots generation: 'Uniform', 'Halton' or 'Sobol'
     show_graph - True, if the plot of dependence between number of clusters and epsilon is needed to be shown, False otherwise
     pdf_export - True, to export the plot to PDF file
     
@@ -194,8 +181,8 @@ def Exp2(n, k, a, eps_min, eps_max, steps, method, show_graph=False, pdf_export=
     if show_graph:
         fig = plt.figure(figsize=(15,8))
         plt.plot(epsilons, components_num)
-        plt.title('Dependence between number of clusters and $\epsilon$ value', size=15)
-        plt.ylabel('Number of clusters', size=15)
+        plt.title('Dependence between  number of connected components and $\epsilon$ value ({})'.format(method), size=15)
+        plt.ylabel('Number of connected components', size=15)
         plt.xlabel('$\epsilon$ value', size=15)
         plt.scatter(start_eps, start_components, c='red', marker='o')
         plt.scatter(fin_eps, one_component_y, c='red', marker='o')
@@ -206,24 +193,26 @@ def Exp2(n, k, a, eps_min, eps_max, steps, method, show_graph=False, pdf_export=
         plt.show()
 
     if pdf_export:
-        pp = PdfPages('CWExp2.pdf')
+        name = 'CWExp2' + method + '.pdf'
+        pp = PdfPages(name)
         pp.savefig(fig)
         pp.close()
     
     return start_eps, fin_eps
 
-def Exp3(n, k, a, eps):
+def Exp3(n, k, a, eps, method):
     
     '''
     n - dimension of space
     k - number of points
     a - length of hypercube's edge
     eps - value of epsilon
+    method - method of dots generation: 'Uniform', 'Halton' or 'Sobol'
     
     Returns True, if a cluster is formed at given parameters, False otherwise
     '''
     
-    matrix = DotsCoordinates(n, k, a)
+    matrix = DotsCoordinates(n, k, a, method)
     euclid_matrix = EuclidMatrix(matrix)
     adj_matrix = CreateAdjMatrix(euclid_matrix, eps)
     components = csgraph.connected_components(csgraph=adj_matrix, directed=False, return_labels=False)
@@ -232,7 +221,7 @@ def Exp3(n, k, a, eps):
     
     return False
 
-def Exp4(n, k, a, eps_min, eps_max, steps):
+def Exp4(n, k, a, eps_min, eps_max, steps, method):
     
     '''
     n - dimension of space
@@ -241,13 +230,12 @@ def Exp4(n, k, a, eps_min, eps_max, steps):
     eps_min - minimum value of epsilon
     eps_max - maximum value of epsilon
     steps - number of iterations from eps_min to eps_max
-    show_graph - True, if the plot of dependence between number of clusters and epsilon is needed to be shown, False otherwise
-    pdf_export - True, to export the plot to PDF file
+    method - method of dots generation: 'Uniform', 'Halton' or 'Sobol'
     
     Returns adjacency matrix of the cluster
     '''
     
-    matrix = DotsCoordinates(n, k, a)
+    matrix = DotsCoordinates(n, k, a, method)
     euclid_matrix = EuclidMatrix(matrix)
     epsilons = np.arange(eps_min, eps_max, (eps_max - eps_min)/steps)
     
@@ -259,7 +247,7 @@ def Exp4(n, k, a, eps_min, eps_max, steps):
             
     return None
 
-def Exp5(n, k, a, eps_min, eps_max, steps):
+def Exp5(n, k, a, eps_min, eps_max, steps, method):
     
     '''
     n - dimension of space
@@ -268,11 +256,12 @@ def Exp5(n, k, a, eps_min, eps_max, steps):
     eps_min - minimum value of epsilon
     eps_max - maximum value of epsilon
     steps - number of iterations from eps_min to eps_max
+    method - method of dots generation: 'Uniform', 'Halton' or 'Sobol'
     
     Returns Betti number for given parameters
     '''
     
-    matrix = DotsCoordinates(n, k, a)
+    matrix = DotsCoordinates(n, k, a, method)
     euclid_matrix = EuclidMatrix(matrix)
     components_num = np.array([])
     flag = False
