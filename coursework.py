@@ -30,7 +30,11 @@ def DotsCoordinates(n, k, a, method):
             result[i] = np.random.uniform(0, a, n)
 
     elif method == 'Halton':
-        result = ht.halton(n, k) * a
+        np.random.seed()
+        i = np.random.randint(1,1000, size=1)[0]
+        temp = ht.halton(n, i+k) * a
+        result = temp[i:]
+        np.random.seed(102)
         
     elif method == 'Sobol':
         np.random.seed()
