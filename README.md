@@ -1,3 +1,3 @@
-## Coursework-2018
+## Study of Typical Configuration of Points in a Hypercube
 
-![Alt Text](https://media.giphy.com/media/2lRTuoKMK1Qv4GaEJZ/giphy.gif)
+![Alt Text](https://media.giphy.com/media/nqgTCSZE0ZE771Rasx/giphy.gif)
